@@ -6,7 +6,6 @@ from langchain.chains import RetrievalQA
 from langchain.vectorstores import FAISS
 from langchain_groq import ChatGroq
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_ollama import OllamaEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from docx import Document
 import os
