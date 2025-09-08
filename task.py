@@ -39,12 +39,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ----------------- CONFIG -----------------
 load_dotenv()
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=gemini_api_key)
 os.environ["GOOGLE_API_KEY"] = os.getenv("GEMINI_API_KEY")
-# ----------------- Helper: Extract text from file -----------------
 def extract_text_from_file(uploaded_file):
     if uploaded_file.type == "application/pdf":
         pages = convert_from_bytes(uploaded_file.read(), dpi=300)
@@ -62,25 +60,25 @@ def extract_text_from_file(uploaded_file):
         extracted_text += response.text + "\n\n"
     return extracted_text, images
 
-# ----------------- Streamlit Tabs -----------------
+
 st.title("📝 EduVision:Your Learning Partner")
 
 tab1, tab2 = st.tabs(["📖 OCR + Cleaning + QA", "📚 Paper Evaluation"])
 
-# ----------------- TAB 1 : OCR + Cleaning + QA -----------------
+
 with tab1:
     uploaded_file = st.file_uploader("📄 Upload handwritten PDF/Image", type=["jpg","jpeg","png","pdf"])
     question = st.text_input("💬 Ask a question about this document (optional)")
 
     if uploaded_file:
-        # Extract text
+     
         raw_text, images = extract_text_from_file(uploaded_file)
 
-        # Show preview images
+   
         for img in images:
             st.image(img, use_container_width=True)
 
-        # Clean extracted text
+      
         st.info("Cleaning extracted text with AI...")
         llm_cleaner = ChatGroq(model="openai/gpt-oss-20b")
         prompt_clean = f"""
@@ -98,13 +96,13 @@ Return a cleaned, readable version with all math symbols preserved exactly.
         st.subheader("✨ Cleaned Text")
         st.text_area("Cleaned output", cleaned_text, height=300)
 
-        # ----------------- Optional QA -----------------
+     
         if question:
             st.info("Running QA on cleaned text...")
             splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
             docs = splitter.split_text(cleaned_text)
 
-            #embeddings = OllamaEmbeddings(model="nomic-embed-text")
+         
 
             embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
             vectordb = FAISS.from_texts(docs, embedding=embeddings)
@@ -115,7 +113,7 @@ Return a cleaned, readable version with all math symbols preserved exactly.
 
             raw_answer = qa_chain.run(question)
 
-            # Format answer with math preservation
+        
             st.info("Formatting QA answer with math preservation...")
             prompt_template = ChatPromptTemplate.from_template("""
 You are an expert at presenting math answers clearly. 
@@ -140,13 +138,13 @@ Now return a clean, step-by-step solution with correct math symbols (no LaTeX).
             st.subheader("💡 AI Answer (Math Preserved)")
             st.text_area("Final Answer", formatted_answer, height=250)
 
-        # Save as Word
+   
         doc = Document()
         doc.add_paragraph(cleaned_text)
         doc.save("output.docx")
         st.download_button("⬇️ Download Word File", open("output.docx", "rb"), "output.docx")
 
-# ----------------- TAB 2 : Paper Evaluation -----------------
+
 with tab2:
     q_file = st.file_uploader("📄 Upload Question Paper", type=["jpg","jpeg","png","pdf"], key="qfile")
     a_file = st.file_uploader("📝 Upload Student Answer Sheet", type=["jpg","jpeg","png","pdf"], key="afile")
@@ -160,7 +158,7 @@ with tab2:
         answer_text, _ = extract_text_from_file(a_file)
         st.text_area("📝 Extracted Answers", answer_text, height=200)
 
-        # Evaluation
+
         st.info("Evaluating answers with AI...")
         llm_evaluator = ChatGroq(model="openai/gpt-oss-20b")
 
@@ -186,7 +184,6 @@ Return a clear evaluation report.
         st.subheader("📊 Evaluation Report")
         st.write(evaluation)
 
-        # Save as Word
         doc = Document()
         doc.add_heading("AI Evaluation Report", level=1)
         doc.add_paragraph(evaluation)
